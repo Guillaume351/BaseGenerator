@@ -2,20 +2,30 @@ class Matrix {
   int _rows;
   int _columns;
 
-  List<List> _values;
+  List<List<double>> _values;
 
-  Matrix(int rows, int columns, {int val = 0}) {
+  Matrix(int rows, int columns, {double val = 0.0}) {
     _rows = rows;
     _columns = columns;
     _values = List.generate(rows, (_) => List.generate(columns, (_) => val));
   }
 
+  Matrix.Ones(int rows, int columns) : this(rows, columns, val: 1);
 
+  Matrix.Diag(Matrix vector) {
+    assert(vector.getSize()[0] == 1 || vector.getSize()[1] == 1);
 
-  Matrix ones(int rows, int columns){
-    return Matrix(rows, columns, val: 1);
+    if (vector.getSize()[0] > 1) {
+      vector = vector.transpose();
+    }
+    _rows = vector.getSize()[1];
+    _columns = _rows;
+    _values = List.generate(
+        vector.getSize()[1],
+            (int i) =>
+            List.generate(vector.getSize()[1],
+                    (int j) => i == j ? vector.getData(0, i) : 0));
   }
-
 
   void setData(int row, int column, double data) {
     _values[row][column] = data;
@@ -41,6 +51,7 @@ class Matrix {
     }
     return matrixText;
   }
+
   /// :'''')
   Matrix transpose() {
     var transposedMatrix = Matrix(_columns, _rows);
@@ -54,7 +65,7 @@ class Matrix {
 
   /// xD
   Matrix operator +(Matrix B) {
-    assert(getSize() == B.getSize());
+    assert(getSize()[0] == B.getSize()[0] && getSize()[1] == B.getSize()[1]);
     var sumMatrix = Matrix(_rows, _columns);
     for (var i = 0; i < _rows; i++) {
       for (var k = 0; k < _columns; k++) {
@@ -66,36 +77,50 @@ class Matrix {
 
   /// :'(
   Matrix operator -(Matrix B) {
-    assert(getSize() == B.getSize());
     var sumMatrix = Matrix(_rows, _columns);
-    for (var i = 0; i < _rows; i++) {
-      for (var k = 0; k < _columns; k++) {
-        sumMatrix.setData(i, k, getData(i, k) - B.getData(i, k));
+    if ((getSize()[0] == B.getSize()[0] && getSize()[1] == B.getSize()[1])) {
+      for (var i = 0; i < _rows; i++) {
+        for (var k = 0; k < _columns; k++) {
+          sumMatrix.setData(i, k, getData(i, k) - B.getData(i, k));
+        }
+      }
+    } else if (B.getSize()[0] == 1 && B.getSize()[1] == _columns) {
+      for (var i = 0; i < _rows; i++) {
+        for (var k = 0; k < _columns; k++) {
+          sumMatrix.setData(i, k, getData(i, k) - B.getData(0, k));
+        }
+      }
+    } else if (B.getSize()[0] == _rows && B.getSize()[1] == 1) {
+      for (var i = 0; i < _rows; i++) {
+        for (var k = 0; k < _columns; k++) {
+          sumMatrix.setData(i, k, getData(i, k) - B.getData(i, 0));
+        }
       }
     }
+
     return sumMatrix;
   }
 
   /// :)
-  Matrix operator *(var B) {
+  Matrix operator *(var m2) {
     var productMatrix;
-    if (B is Matrix) {
-      assert(_columns == B.getSize()[0]);
-      productMatrix = Matrix(_rows, B.getSize()[1]);
+    if (m2 is Matrix) {
+      assert(_columns == m2.getSize()[0]);
+      productMatrix = Matrix(_rows, m2.getSize()[1]);
       for (var i = 0; i < _rows; i++) {
         for (var j = 0; j < _columns; j++) {
           var smallSum = 0.0; // La petite sum
           for (var k = 0; k < _rows; k++) {
-            smallSum += getData(i, k) * B.getData(k, j);
+            smallSum += getData(i, k) * m2.getData(k, j);
           }
           productMatrix.setData(i, j, smallSum);
         }
       }
-    } else if (B is double || B is int) {
+    } else if (m2 is double || m2 is int) {
       productMatrix = Matrix(_rows, _columns);
       for (var i = 0; i < _rows; i++) {
         for (var j = 0; j < _columns; j++) {
-          productMatrix.setData(i, j, B * getData(i, j));
+          productMatrix.setData(i, j, m2 * getData(i, j));
         }
       }
     }
