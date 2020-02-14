@@ -1,3 +1,5 @@
+import 'dart:math';
+
 class Matrix {
   int _rows;
   int _columns;
@@ -27,6 +29,13 @@ class Matrix {
                     (int j) => i == j ? vector.getData(0, i) : 0));
   }
 
+  Matrix.Random(int rows, int columns) {
+    _rows = rows;
+    _columns = columns;
+    _values = List.generate(
+        rows, (_) => List.generate(columns, (_) => Random().nextDouble()));
+  }
+
   void setData(int row, int column, double data) {
     _values[row][column] = data;
   }
@@ -35,9 +44,24 @@ class Matrix {
     return _values[row][column];
   }
 
+
+  double getNorm() {
+    var norm = 0.0;
+    for (var i = 0; i < _rows; i++) {
+      for (var k = 0; k < _columns; k++) {
+        norm += pow(getData(i, k), 2);
+      }
+    }
+    return sqrt(norm);
+  }
+
   /// return [rows, columns]
   List<int> getSize() {
     return [_rows, _columns];
+  }
+
+  double toDouble() {
+    return getData(1, 1);
   }
 
   @override
