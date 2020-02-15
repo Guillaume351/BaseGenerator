@@ -53,6 +53,26 @@ class Matrix {
     return sqrt(norm);
   }
 
+  double getMax() {
+    var max = getData(0, 0);
+    for (var i = 0; i < _rows; i++) {
+      for (var k = 0; k < _columns; k++) {
+        max = getData(i, k) > max ? getData(i, k) : max;
+      }
+    }
+    return max;
+  }
+
+  double getMin() {
+    var min = getData(0, 0);
+    for (var i = 0; i < _rows; i++) {
+      for (var k = 0; k < _columns; k++) {
+        min = getData(i, k) < min ? getData(i, k) : min;
+      }
+    }
+    return min;
+  }
+
   /// Get eingen values, based on Power Method
   List<List> eigenValues(int numberOfValues, {double epsilon = 0.001}) {
     List<List> result = [];

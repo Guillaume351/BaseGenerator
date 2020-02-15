@@ -7,7 +7,6 @@ import 'package:BaseGenerator/Objects/ImageHandler.dart';
 import 'package:BaseGenerator/Objects/Matrix.dart';
 import 'package:image/image.dart';
 
-
 void main(List<String> arguments) {
   print('Hello world: ${BaseGenerator.calculate()}!');
   var superMatrix = Matrix(1, 3);
@@ -50,30 +49,28 @@ Future<void> LoadImages({String path = "assets/images/"}) async {
 
   List smallEigenValVect = smallAutoCorr.eigenValues(5);
 
-  List eigenValVect = []; // autoCorr.eigenValues(8);
-
   List<double> eigenValues = [];
-  smallEigenValVect.forEach((e) =>
-  {
-    eigenValues.add(e[0])
-  });
+  smallEigenValVect.forEach((e) => {eigenValues.add(e[0])});
 
-  Matrix diag = Matrix(smallAutoCorr.getSize()[0],smallAutoCorr.getSize()[1]);
-
+  Matrix diag = Matrix(smallAutoCorr.getSize()[0], smallAutoCorr.getSize()[1]);
 
   eigenValues.forEach((double d) {
-    diag.setData(eigenValues.indexOf(d), eigenValues.indexOf(d), pow(d, (-1/2)));
+    diag.setData(
+        eigenValues.indexOf(d), eigenValues.indexOf(d), pow(d, (-1 / 2)));
   });
-
 
   smallEigenValVect.forEach((e) {
     Matrix vect = M * (e[1].transpose() * diag).transpose();
-    vect = vect * (1/vect.getNorm()) * 255*100;
-    Image image = handler.MatrixToImage(vect.unVectorize(allImages[0].getSize()[0]));
+    var min = vect.getMin();
+    var max = vect.getMax();
+
+    vect = (vect - Matrix.Ones(vect.getSize()[0], vect.getSize()[1]) * min) *
+        (1 / (max - min));
+    Image image =
+    handler.MatrixToImage(vect.unVectorize(allImages[0].getSize()[0]));
     final filename = "output/" + e[0].toString() + ".png";
     new File(filename).writeAsBytesSync(encodePng(image));
   });
-
 
   print("Done ! Took : " + DateTime.now().difference(timeBefore).toString());
 }
