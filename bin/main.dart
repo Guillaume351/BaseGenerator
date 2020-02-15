@@ -21,7 +21,7 @@ void main(List<String> arguments) {
       superMegaDiagonaleDesFamilles - superMatrix.transpose();
   print(superMegaDiagonaleDesFamilles);
 
-  LoadImages();
+  LoadImages(path: "assets/faces/");
 }
 
 Future<void> LoadImages({String path = "assets/images/"}) async {
@@ -47,16 +47,18 @@ Future<void> LoadImages({String path = "assets/images/"}) async {
   // Matrix autoCorr = M * M.transpose();
   Matrix smallAutoCorr = M.transpose() * M;
 
-  List smallEigenValVect = smallAutoCorr.eigenValues(5);
+  List smallEigenValVect = smallAutoCorr.eigenValues(20, epsilon: 0.00001);
 
   List<double> eigenValues = [];
   smallEigenValVect.forEach((e) => {eigenValues.add(e[0])});
 
   Matrix diag = Matrix(smallAutoCorr.getSize()[0], smallAutoCorr.getSize()[1]);
 
+  var count = 0;
   eigenValues.forEach((double d) {
     diag.setData(
-        eigenValues.indexOf(d), eigenValues.indexOf(d), pow(d, (-1 / 2)));
+        count, count, pow(d, (-1 / 2)));
+    count++;
   });
 
   smallEigenValVect.forEach((e) {
@@ -65,9 +67,10 @@ Future<void> LoadImages({String path = "assets/images/"}) async {
     var max = vect.getMax();
 
     vect = (vect - Matrix.Ones(vect.getSize()[0], vect.getSize()[1]) * min) *
-        (1 / (max - min));
+        (1 / (max - min)) *
+        255;
     Image image =
-    handler.MatrixToImage(vect.unVectorize(allImages[0].getSize()[0]));
+        handler.MatrixToImage(vect.unVectorize(allImages[0].getSize()[0]));
     final filename = "output/" + e[0].toString() + ".png";
     new File(filename).writeAsBytesSync(encodePng(image));
   });

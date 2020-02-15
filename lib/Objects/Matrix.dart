@@ -114,8 +114,10 @@ class Matrix {
 
   void addColumnVector(Matrix column) {
     _columns++;
+    var count = 0;
     _values.forEach((List l) {
-      l.add(column.getData(_values.indexOf(l), 0));
+      l.add(column.getData(count, 0));
+      count++;
     });
     /**
         for (var i = 0; i < _rows; i++) {
