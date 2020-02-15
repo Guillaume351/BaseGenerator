@@ -24,9 +24,8 @@ class Matrix {
     _columns = _rows;
     _values = List.generate(
         vector.getSize()[1],
-            (int i) =>
-            List.generate(vector.getSize()[1],
-                    (int j) => i == j ? vector.getData(0, i) : 0));
+        (int i) => List.generate(
+            vector.getSize()[1], (int j) => i == j ? vector.getData(0, i) : 0));
   }
 
   Matrix.Random(int rows, int columns) {
@@ -44,7 +43,6 @@ class Matrix {
     return _values[row][column];
   }
 
-
   double getNorm() {
     var norm = 0.0;
     for (var i = 0; i < _rows; i++) {
@@ -55,8 +53,64 @@ class Matrix {
     return sqrt(norm);
   }
 
-  List eigenValues() {
+  /// Get eingen values, based on Power Method
+  List<List> eigenValues(int numberOfValues, {double epsilon = 0.001}) {
+    List<List> result = [];
+    Matrix A = this;
+    assert(numberOfValues <= getSize()[0] && numberOfValues <= getSize()[1]);
+    for (int i = 0; i < numberOfValues; i++) {
+      Matrix x = Matrix.Random(getSize()[1], 1);
+      //  int p = 0;
+      double beta = (x.transpose() * A * x).toDouble();
+      double betaPlus1 = beta;
+      Matrix y;
+      do {
+        beta = betaPlus1;
+        y = A * x;
+        x = y * (1 / y.getNorm());
+        betaPlus1 = (x.transpose() * A * x).toDouble();
+        // p++;
+      } while ((betaPlus1 - beta).abs() / beta.abs() >= epsilon);
 
+      result.add([betaPlus1, x]);
+      A = deflate(A, betaPlus1, x);
+    }
+    return result;
+  }
+
+  Matrix deflate(Matrix A, double eigenValue, Matrix eigenVector) {
+    return (A - eigenVector * eigenVector.transpose() * eigenValue);
+  }
+
+  Matrix concatenate(Matrix matrix) {
+    Matrix endMatrix = this;
+    if (matrix.getSize()[0] == _rows) {
+      endMatrix.addColumnVector(matrix);
+    } else if (matrix.getSize()[1] == _columns) {
+      endMatrix.addRowVector(matrix);
+    }
+  }
+
+
+  void addColumnVector(Matrix column) {
+    _columns++;
+    _values.forEach((List l) {
+      l.add(column.getData(_values.indexOf(l), 0));
+    });
+    /**
+        for (var i = 0; i < _rows; i++) {
+        print(_columns);
+        print(_values);
+        setData(i, _columns-1, column.getData(i, 0));
+        }*/
+  }
+
+  void addRowVector(Matrix row) {
+    _rows++;
+    _values.add(List.generate(_columns, (_) => 0));
+    for (int i = 0; i < _rows; i++) {
+      this.setData(_rows - 1, i, row.getData(i, 0));
+    }
   }
 
   /// return [rows, columns]
@@ -65,7 +119,7 @@ class Matrix {
   }
 
   double toDouble() {
-    return getData(1, 1);
+    return getData(0, 0);
   }
 
   @override
@@ -89,6 +143,31 @@ class Matrix {
       }
     }
     return transposedMatrix;
+  }
+
+  /// @returns a (n*n) x 1 Matrix
+  Matrix vectorize() {
+    Matrix vector = Matrix(_rows * _columns, 1);
+    var count = 0;
+    for (var i = 0; i < _rows; i++) {
+      for (var j = 0; j < _columns; j++) {
+        vector.setData(count, 0, getData(i, j));
+        count++;
+      }
+    }
+    return vector;
+  }
+
+  Matrix unVectorize(int numberOfRows){
+    Matrix vector = Matrix(numberOfRows, (_rows/numberOfRows).round());
+    var count = 0;
+    for (var i = 0; i < numberOfRows; i++) {
+      for (var j = 0; j < (_rows/numberOfRows).round(); j++) {
+        vector.setData(i, j, getData(count, 0));
+        count++;
+      }
+    }
+    return vector;
   }
 
   /// xD
@@ -136,9 +215,9 @@ class Matrix {
       assert(_columns == m2.getSize()[0]);
       productMatrix = Matrix(_rows, m2.getSize()[1]);
       for (var i = 0; i < _rows; i++) {
-        for (var j = 0; j < _columns; j++) {
+        for (var j = 0; j < m2.getSize()[1]; j++) {
           var smallSum = 0.0; // La petite sum
-          for (var k = 0; k < _rows; k++) {
+          for (var k = 0; k < _columns; k++) {
             smallSum += getData(i, k) * m2.getData(k, j);
           }
           productMatrix.setData(i, j, smallSum);
