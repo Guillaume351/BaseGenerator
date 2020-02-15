@@ -55,6 +55,10 @@ class Matrix {
     return sqrt(norm);
   }
 
+  List eigenValues() {
+
+  }
+
   /// return [rows, columns]
   List<int> getSize() {
     return [_rows, _columns];
